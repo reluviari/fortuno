@@ -280,7 +280,7 @@ def main():
 
     elif st.session_state.current_page == "Zerar Banco de Dados":
         st.title("Zerar Banco de Dados")
-        st.warning("Atenção: Esta ação irá remover todas as transações do banco de dados. Esta ação não pode ser desfeita.")
+        st.error("Atenção: Esta ação irá remover todas as transações do banco de dados. Esta ação não pode ser desfeita.")
         if st.button("Zerar Banco de Dados"):
             zerar_banco_dados()
     elif st.session_state.current_page == "Gerar Transações de Exemplo":
