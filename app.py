@@ -12,6 +12,7 @@ import random
 from datetime import datetime, timedelta
 from decimal import Decimal
 import altair as alt
+from pages.report_por_categoria import report_por_categoria
 
 # Configure o locale para português do Brasil
 locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
@@ -77,7 +78,7 @@ st.sidebar.markdown('<p class="sidebar-title">Gerenciador Financeiro</p>', unsaf
 CATEGORIES = ['Alimentação', 'Transporte', 'Moradia', 'Saúde', 'Educação', 'Lazer', 'Outros Despesas']
 
 # Opções do menu
-menu_options = ["Dashboard", "Adicionar Transação", "Listar Transações", "Zerar Banco de Dados", "Gerar Transações de Exemplo"]
+menu_options = ["Dashboard", "Adicionar Transação", "Listar Transações", "Report por Categoria", "Zerar Banco de Dados", "Gerar Transações de Exemplo"]
 
 # Função para zerar o banco de dados
 def zerar_banco_dados():
@@ -277,6 +278,10 @@ def main():
         # Verificar se estamos na página correta antes de chamar a função
         if st.session_state.current_page == "Listar Transações":
             list_transactions()
+
+    elif st.session_state.current_page == "Report por Categoria":
+        # Chama a função report_por_categoria do arquivo pages/report_por_categoria.py
+        report_por_categoria()
 
     elif st.session_state.current_page == "Zerar Banco de Dados":
         st.title("Zerar Banco de Dados")
