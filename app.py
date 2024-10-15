@@ -32,7 +32,10 @@ def save_transactions(transacoes):
 
 # Function to format currency
 def format_currency(value):
-    return f"R$ {value:,.2f}".replace(',', '_').replace('.', ',').replace('_', '.')
+    if value < 0:
+        return f"-R$ {abs(value):,.2f}".replace(',', '_').replace('.', ',').replace('_', '.')
+    else:
+        return f"R$ {value:,.2f}".replace(',', '_').replace('.', ',').replace('_', '.')
 
 # Load transactions
 transacoes = load_transactions()
@@ -58,16 +61,6 @@ def update_category_options():
 # Configuração da página
 st.set_page_config(page_title="Gerenciador Financeiro", layout="wide", initial_sidebar_state="expanded")
 
-# CSS personalizado apenas para o título do sidebar
-st.markdown("""
-<style>
-    .sidebar-title {
-        font-size: 1.2rem;
-        font-weight: bold;
-    }
-</style>
-""", unsafe_allow_html=True)
-
 if 'financial_record' not in st.session_state:
     st.session_state.financial_record = FinancialRecord()
 
@@ -78,7 +71,7 @@ st.sidebar.markdown('<p class="sidebar-title">Gerenciador Financeiro</p>', unsaf
 CATEGORIES = ['Alimentação', 'Transporte', 'Moradia', 'Saúde', 'Educação', 'Lazer', 'Outros Despesas']
 
 # Opções do menu
-menu_options = ["Dashboard", "Adicionar Transação", "Listar Transações", "Report por Categoria", "Zerar Banco de Dados", "Gerar Transações de Exemplo"]
+menu_options = ["Dashboard", "Adicionar Transação", "Listar Transações", "Report por Categorias", "Zerar Banco de Dados", "Gerar Transações de Exemplo"]
 
 # Função para zerar o banco de dados
 def zerar_banco_dados():
@@ -156,36 +149,49 @@ def main():
 
         with col1:
             with st.container():
-                st.markdown('<div class="card">', unsafe_allow_html=True)
                 st.subheader("Resumo Financeiro")
+
                 balance = st.session_state.financial_record.get_balance()
-                st.metric("Saldo Atual", format_currency(balance), delta=format_currency(balance))
+                balance_color = "green" if balance >= 0 else "red"
+                st.markdown(f"<h4 style='color: {balance_color};'>Saldo Atual: {format_currency(balance)}</h4>", unsafe_allow_html=True)
+
                 report = st.session_state.financial_record.report_by_category()
                 if not isinstance(report, str):
-                    st.metric("Total de Despesas", format_currency(report['Total de Despesas']), delta=format_currency(-report['Total de Despesas']))
-                    st.metric("Total de Receitas", format_currency(report['Total de Receitas']), delta=format_currency(report['Total de Receitas']))
+                    total_expenses = -abs(report['Total de Despesas'])
+                    total_income = report['Total de Receitas']  # Definindo total_income aqui
+                    st.markdown(f"<h4 style='color: red;'>Total de Despesas: {format_currency(total_expenses)}</h4>", unsafe_allow_html=True)
+                    st.markdown(f"<h4 style='color: green;'>Total de Receitas: {format_currency(total_income)}</h4>", unsafe_allow_html=True)
                 st.markdown('</div>', unsafe_allow_html=True)
 
         with col2:
             with st.container():
-                st.markdown('<div class="card">', unsafe_allow_html=True)
-                st.subheader("Distribuição de Despesas e Receitas")
-                report = st.session_state.financial_record.report_by_category()
+                st.subheader("Distribuição de Receitas e Despesas")
+
                 if not isinstance(report, str):
-                    fig = px.pie(
-                        values=[report['Total de Despesas'], report['Total de Receitas']],
-                        names=['Despesas', 'Receitas'],
-                        hole=0.3
-                    )
+                    # Criar dados para o gráfico de pizza
+                    pie_data = pd.DataFrame({
+                        'Tipo': ['Receitas', 'Despesas'],
+                        'Valor': [abs(total_income), abs(total_expenses)]
+                    })
+
+                    # Criar o gráfico de pizza
+                    fig = px.pie(pie_data, values='Valor', names='Tipo',
+                                 color='Tipo',
+                                 color_discrete_map={'Receitas': 'green', 'Despesas': 'red'})
+
+                    # Atualizar o layout para melhor visualização
+                    fig.update_traces(textposition='inside', textinfo='percent+label')
                     fig.update_layout(
-                        autosize=False,
-                        width=400,
-                        height=400,
-                        margin=dict(l=20, r=20, t=20, b=20),
+                        autosize=True,
+                        margin=dict(l=20, r=20, t=30, b=20),
+                        height=300
                     )
+
+                    # Exibir o gráfico
                     st.plotly_chart(fig, use_container_width=True)
                 else:
                     st.info("Não há dados suficientes para gerar o gráfico.")
+
                 st.markdown('</div>', unsafe_allow_html=True)
 
     elif st.session_state.current_page == "Adicionar Transação":
@@ -205,9 +211,9 @@ def main():
 
         # Categoria
         if transaction_type == "Despesa":
-            category = st.selectbox("Categoria", ['Alimentação', 'Transporte', 'Moradia', 'Saúde', 'Educação', 'Lazer', 'Outros Despesas'])
+            category = st.selectbox("Categorias", ['Alimentação', 'Transporte', 'Moradia', 'Saúde', 'Educação', 'Lazer', 'Outros Despesas'])
         else:  # Receita
-            category = st.selectbox("Categoria", ["Salário", "Investimentos", "Bônus", "Propina", "Caixa 2", "Outros Receitas"])
+            category = st.selectbox("Categorias", ["Salário", "Investimentos", "Bônus", "Propina", "Caixa 2", "Outros Receitas"])
 
         # Valor
         amount = st.number_input("Valor", min_value=0.01, format="%.2f")
@@ -279,7 +285,7 @@ def main():
         if st.session_state.current_page == "Listar Transações":
             list_transactions()
 
-    elif st.session_state.current_page == "Report por Categoria":
+    elif st.session_state.current_page == "Report por Categorias":
         # Chama a função report_por_categoria do arquivo pages/report_por_categoria.py
         report_por_categoria()
 
