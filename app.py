@@ -26,9 +26,9 @@ def load_transactions():
         return []
 
 # Function to save transactions to JSON file
-def save_transactions(transacoes):
+def save_transactions(transactions):
     with open('transactions.json', 'w') as file:
-        json.dump(transacoes, file, indent=2)
+        json.dump(transactions, file, indent=2)
 
 # Function to format currency
 def format_currency(value):
@@ -38,13 +38,7 @@ def format_currency(value):
         return f"R$ {value:,.2f}".replace(',', '_').replace('.', ',').replace('_', '.')
 
 # Load transactions
-transacoes = load_transactions()
-
-# Adicione esta função no início do arquivo, junto com as outras funções auxiliares
-def zerar_transacoes():
-    st.session_state.financial_record = FinancialRecord()
-    save_transactions([])  # Salva uma lista vazia no arquivo JSON
-    st.success("Todas as transações foram removidas.")
+transactions = load_transactions()
 
 # Adicione esta função no início do arquivo, junto com as outras funções auxiliares
 def update_category_options():
@@ -71,10 +65,10 @@ st.sidebar.markdown('<p class="sidebar-title">Gerenciador Financeiro</p>', unsaf
 CATEGORIES = ['Alimentação', 'Transporte', 'Moradia', 'Saúde', 'Educação', 'Lazer', 'Outros Despesas']
 
 # Opções do menu
-menu_options = ["Dashboard", "Adicionar Transação", "Listar Transações", "Report por Categorias", "Zerar Banco de Dados", "Gerar Transações de Exemplo"]
+menu_options = ["Dashboard", "Adicionar Transação", "Listar Transações", "Report por Categoria", "Zerar Banco de Dados", "Gerar Transações de Exemplo"]
 
 # Função para zerar o banco de dados
-def zerar_banco_dados():
+def empty_transactions():
     if 'financial_record' in st.session_state:
         st.session_state.financial_record = FinancialRecord()
 
@@ -285,7 +279,7 @@ def main():
         if st.session_state.current_page == "Listar Transações":
             list_transactions()
 
-    elif st.session_state.current_page == "Report por Categorias":
+    elif st.session_state.current_page == "Report por Categoria":
         # Chama a função report_por_categoria do arquivo pages/report_por_categoria.py
         report_por_categoria()
 
@@ -293,7 +287,8 @@ def main():
         st.title("Zerar Banco de Dados")
         st.error("Atenção: Esta ação irá remover todas as transações do banco de dados. Esta ação não pode ser desfeita.")
         if st.button("Zerar Banco de Dados"):
-            zerar_banco_dados()
+            empty_transactions()
+
     elif st.session_state.current_page == "Gerar Transações de Exemplo":
         st.title("Gerar Transações de Exemplo")
         if st.button("Gerar Transações"):
