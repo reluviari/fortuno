@@ -32,7 +32,7 @@ def save_transactions(transacoes):
 
 # Function to format currency
 def format_currency(value):
-    return f"R$ {value:.2f}"
+    return f"R$ {value:,.2f}".replace(',', '_').replace('.', ',').replace('_', '.')
 
 # Load transactions
 transacoes = load_transactions()
@@ -150,7 +150,7 @@ def main():
 
     # Conteúdo principal baseado na página selecionada
     if st.session_state.current_page == "Dashboard":
-        st.header("Dashboard Financeiro")
+        st.title("Dashboard Financeiro")
 
         col1, col2 = st.columns(2)
 
@@ -159,11 +159,11 @@ def main():
                 st.markdown('<div class="card">', unsafe_allow_html=True)
                 st.subheader("Resumo Financeiro")
                 balance = st.session_state.financial_record.get_balance()
-                st.metric("Saldo Atual", f"R$ {balance:.2f}", delta=balance)
+                st.metric("Saldo Atual", format_currency(balance), delta=format_currency(balance))
                 report = st.session_state.financial_record.report_by_category()
                 if not isinstance(report, str):
-                    st.metric("Total de Despesas", f"R$ {report['Total de Despesas']:.2f}", delta=-report['Total de Despesas'])
-                    st.metric("Total de Receitas", f"R$ {report['Total de Receitas']:.2f}", delta=report['Total de Receitas'])
+                    st.metric("Total de Despesas", format_currency(report['Total de Despesas']), delta=format_currency(-report['Total de Despesas']))
+                    st.metric("Total de Receitas", format_currency(report['Total de Receitas']), delta=format_currency(report['Total de Receitas']))
                 st.markdown('</div>', unsafe_allow_html=True)
 
         with col2:
